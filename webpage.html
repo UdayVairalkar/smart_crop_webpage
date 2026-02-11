@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Smart Crop Advisory — Prototype</title>
+  <style>
+    :root{
+      --bg:#f6f9fb; --card:#ffffff; --accent:#2b7a78; --muted:#6b7280;
+      --glass: rgba(255,255,255,0.6);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#eef7f6, #f6fbff);color:#0f172a}
+    .container{max-width:1100px;margin:28px auto;padding:20px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:56px;height:56px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px}
+    h1{margin:0;font-size:20px}
+    p.lead{margin:4px 0 0;color:var(--muted);font-size:13px}
+
+    .grid{display:grid;grid-template-columns:1fr 400px;gap:18px;margin-top:18px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr} .rightCol{order:-1}}
+
+    .card{background:var(--card);border-radius:10px;padding:18px;box-shadow:0 6px 18px rgba(15,23,42,0.06)}
+    label{display:block;font-size:13px;margin-bottom:6px;color:#111827}
+    input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef2;font-size:14px}
+    textarea{min-height:100px;resize:vertical}
+    .row{display:flex;gap:10px}
+    .row > *{flex:1}
+    .btn{display:inline-block;padding:10px 14px;border-radius:8px;border:none;cursor:pointer}
+    .btn-primary{background:var(--accent);color:#fff}
+    .btn-ghost{background:transparent;border:1px solid #d1d5db;color:#111827}
+    .muted{color:var(--muted);font-size:13px}
+
+    .langSwitch{display:flex;gap:8px}
+    .langBtn{padding:6px 10px;border-radius:8px;border:1px solid transparent;cursor:pointer}
+    .langBtn.active{background:#fff;border-color:#e6eef2;box-shadow:0 3px 10px rgba(11,22,21,0.04)}
+
+    .recommend{margin-top:12px}
+    .recItem{padding:12px;border-radius:10px;border:1px dashed #e6eef2;background:linear-gradient(90deg,#fff, #fcfffd);margin-bottom:10px}
+    .small{font-size:12px;color:var(--muted)}
+
+    .voiceControls{display:flex;gap:8px;align-items:center;margin-top:8px}
+    .status{display:inline-block;padding:6px 8px;border-radius:8px;font-size:12px;background:#fff;border:1px solid #eef2f7}
+
+    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+
+    /* accessibility */
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">SC</div>
+        <div>
+          <h1 id="title">Smart Crop Advisory</h1>
+          <p class="lead" id="subtitle">Personalized, multilingual advisory for small & marginal farmers</p>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="langSwitch" aria-label="Language switch">
+          <button class="langBtn active" data-lang="en">English</button>
+          <button class="langBtn" data-lang="hi">हिंदी</button>
+          <button class="langBtn" data-lang="pa">ਪੰਜਾਬੀ</button>
+        </div>
+        <button class="btn btn-ghost" id="speakReportBtn">🔈 Read Recommendation</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card leftCol">
+        <h2 id="formTitle">Farmer Input</h2>
+        <p class="muted" id="formDesc">Fill basic details. Use voice input if needed.</p>
+
+        <div style="margin-top:12px">
+          <label id="labelName">Farmer Name</label>
+          <input id="farmerName" placeholder="e.g., Ramesh" />
+        </div>
+
+        <div style="margin-top:12px" class="row">
+          <div>
+            <label id="labelSoil">Soil Type</label>
+            <select id="soilType">
+              <option value="loam">Loam</option>
+              <option value="sandy">Sandy</option>
+              <option value="clay">Clay</option>
+              <option value="silty">Silty</option>
+            </select>
+          </div>
+          <div>
+            <label id="labelArea">Farm Area (acres)</label>
+            <input id="area" type="number" min="0.01" step="0.01" value="1" />
+          </div>
+        </div>
+
+        <div style="margin-top:12px" class="row">
+          <div>
+            <label id="labelCrop">Previous Crop</label>
+            <input id="prevCrop" placeholder="e.g., Wheat" />
+          </div>
+          <div>
+            <label id="labelProblem">Main Problem</label>
+            <select id="mainProblem">
+              <option value="low_yield">Low yield</option>
+              <option value="pests">Pests</option>
+              <option value="water">Water stress</option>
+              <option value="unknown">Don't know</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <label id="labelNotes">Notes / Observations</label>
+          <textarea id="notes" placeholder="Soil color, recent rain, pests noticed..."></textarea>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="adviseBtn">Get Advisory</button>
+          <button class="btn btn-ghost" id="voiceBtn">🎤 Voice Input</button>
+          <button class="btn btn-ghost" id="clearBtn">Clear</button>
+        </div>
+
+        <div class="voiceControls">
+          <div class="status" id="voiceStatus">Mic: off</div>
+          <div class="muted" id="voiceTip">Tip: Click mic and speak name, soil type, previous crop.</div>
+        </div>
+
+        <div class="recommend" id="recommendSection" aria-live="polite"></div>
+
+        <div style="margin-top:12px" class="small">
+          <strong>Note:</strong> This is a prototype advisory. Replace placeholder weather/soil APIs with govt/NREL data for production.
+        </div>
+      </section>
+
+      <aside class="card rightCol">
+        <h3 id="panelTitle">Quick Tools</h3>
+        <div style="margin-top:12px">
+          <label id="labelWeather">Location (for weather)</label>
+          <input id="location" placeholder="e.g., Ludhiana, Punjab" />
+          <div class="small" style="margin-top:8px" id="weatherBox">Weather: <span id="weatherText">— (demo)</span></div>
+          <div class="small" style="margin-top:6px">Soil pH: <span id="soilPh">—</span></div>
+          <div style="margin-top:10px">
+            <button class="btn btn-primary" id="fetchWeather">Fetch Weather (demo)</button>
+            <button class="btn btn-ghost" id="downloadReport">Print / Save</button>
+          </div>
+        </div>
+
+        <hr style="margin:14px 0;border:none;border-top:1px solid #eef2f7">
+
+        <h4 id="aboutTitle">About Advisory</h4>
+        <p class="muted" id="aboutText">Uses soil type, farm area, previous crop and common rules to recommend suitable crops, fertilizer guidance and pest control suggestions. Integrate with satellite / soil lab / weather APIs for precision.</p>
+
+        <hr style="margin:14px 0;border:none;border-top:1px solid #eef2f7">
+
+        <h4 id="dataTitle">Data & Next Steps</h4>
+        <ol style="padding-left:18px;margin:0" class="muted">
+          <li>Connect to weather API (Open-Meteo / OpenWeather / IMD).</li>
+          <li>Collect soil lab results (pH, NPK) for ML recommendations.</li>
+          <li>Add localized language audio messages & extension to IVR.</li>
+        </ol>
+      </aside>
+    </main>
+
+    <footer>
+      <div>Prototype — Smart Crop Advisory • Govt. of Punjab (sample) • Built for demo</div>
+    </footer>
+  </div>
+
+  <script>
+    // -------------------------
+    // Simple multilingual dictionary
+    // -------------------------
+    const i18n = {
+      en: {
+        title: "Smart Crop Advisory",
+        subtitle: "Personalized, multilingual advisory for small & marginal farmers",
+        formTitle: "Farmer Input",
+        formDesc: "Fill basic details. Use voice input if needed.",
+        labelName: "Farmer Name",
+        labelSoil: "Soil Type",
+        labelArea: "Farm Area (acres)",
+        labelCrop: "Previous Crop",
+        labelProblem: "Main Problem",
+        labelNotes: "Notes / Observations",
+        adviseBtn: "Get Advisory",
+        voiceBtn: "🎤 Voice Input",
+        clearBtn: "Clear",
+        aboutTitle: "About Advisory",
+        aboutText: "Uses soil type, farm area, previous crop and common rules to recommend suitable crops and guidance.",
+        panelTitle: "Quick Tools",
+        labelWeather: "Location (for weather)",
+        fetchWeather: "Fetch Weather (demo)",
+        downloadReport: "Print / Save",
+        speakReportBtn: "🔈 Read Recommendation",
+        smallNote: "Note: Prototype. Replace demo APIs for production."
+      },
+      hi: {
+        title: "स्मार्ट क्रॉप एडवायज़री",
+        subtitle: "छोटे एवं सीमांत किसानों के लिए व्यक्तिगत सलाह",
+        formTitle: "किसान की जानकारी",
+        formDesc: "आवश्यक जानकारी भरें। वॉइस इनपुट का उपयोग करें।",
+        labelName: "किसान का नाम",
+        labelSoil: "मृदा प्रकार",
+        labelArea: "खेत का क्षेत्र (एकड़)",
+        labelCrop: "पिछली फसल",
+        labelProblem: "मुख्य समस्या",
+        labelNotes: "नोट्स / अवलोकन",
+        adviseBtn: "सलाह लें",
+        voiceBtn: "🎤 वॉइस इनपुट",
+        clearBtn: "साफ़ करें",
+        aboutTitle: "एडवायज़री के बारे में",
+        aboutText: "मृदा प्रकार, क्षेत्र और पिछली फसल के आधार पर सुझाव देता है।",
+        panelTitle: "त्वरित उपकरण",
+        labelWeather: "स्थान (मौसम के लिए)",
+        fetchWeather: "मौसम लें (डेमो)",
+        downloadReport: "प्रिंट / सेव",
+        speakReportBtn: "🔈 सुझाव पढ़ो",
+        smallNote: "नोट: प्रोटोटाइप। प्रोडक्शन के लिए API बदलें।"
+      },
+      pa: {
+        title: "ਸਮਾਰਟ ਫਸ ਸਲਾਹਕਾਰ",
+        subtitle: " ਛੋਟੇ ਅਤੇ ਸੀਮੰਤ ਕਿਸਾਨਾਂ ਲਈ ਨਿੱਜੀ ਸਿਫਾਰਿਸ਼ਾਂ",
+        formTitle: "ਕਿਸਾਨ ਜਾਣਕਾਰੀ",
+        formDesc: "ਜ਼ਰੂਰੀ ਜਾਣਕਾਰੀ ਭਰੋ। ਵੌਇਸ ਇਨਪੁਟ ਵਰਤੋ।",
+        labelName: "ਕਿਸਾਨ ਦਾ ਨਾਮ",
+        labelSoil: "ਮਿੱਟੀ ਦੀ ਕਿਸਮ",
+        labelArea: "ਖੇਤ ਖੇਤਰ (ਏਕੜ)",
+        labelCrop: "ਪਿਛਲੀ ਫਸ",
+        labelProblem: "ਮੁੱਖ ਸਮੱਸਿਆ",
+        labelNotes: "ਨੋਟਸ / ਨਿਰੀਖਣ",
+        adviseBtn: "ਸੁਝਾਅ ਲਵੋ",
+        voiceBtn: "🎤 ਵੌਇਸ ਇਨਪੁਟ",
+        clearBtn: "ਸਾਫ਼ ਕਰੋ",
+        aboutTitle: "ਸਲਾਹ ਬਾਰੇ",
+        aboutText: "ਮਿੱਟੀ, ਖੇਤਰ ਅਤੇ ਪਿਛਲੀ ਫਸ ਦੇ ਆਧਾਰ 'ਤੇ ਸਿਫਾਰਸ਼ਾਂ ਦਿੰਦਾ ਹੈ।",
+        panelTitle: "ਤੇਜ਼ ਸੰਦ",
+        labelWeather: "ਟਿਕਾਣਾ (ਮੌਸਮ ਲਈ)",
+        fetchWeather: "ਮੌਸਮ ਲਵੋ (ਡੈਮੋ)",
+        downloadReport: "ਪ੍ਰਿੰਟ / ਸੇਵ",
+        speakReportBtn: "🔈 ਸੁਝਾਅ ਪੜ੍ਹੋ",
+        smallNote: "ਨੋਟ: ਪ੍ਰੋਟੋਟਾਈਪ। ਪ੍ਰੋਡਕਸ਼ਨ ਲਈ API ਬਦਲੋ।"
+      }
+    };
+
+    // apply language
+    function applyLang(lang){
+      const map = i18n[lang] || i18n.en;
+      document.getElementById('title').innerText = map.title;
+      document.getElementById('subtitle').innerText = map.subtitle;
+      document.getElementById('formTitle').innerText = map.formTitle;
+      document.getElementById('formDesc').innerText = map.formDesc;
+      document.getElementById('labelName').innerText = map.labelName;
+      document.getElementById('labelSoil').innerText = map.labelSoil;
+      document.getElementById('labelArea').innerText = map.labelArea;
+      document.getElementById('labelCrop').innerText = map.labelCrop;
+      document.getElementById('labelProblem').innerText = map.labelProblem;
+      document.getElementById('labelNotes').innerText = map.labelNotes;
+      document.getElementById('adviseBtn').innerText = map.adviseBtn;
+      document.getElementById('voiceBtn').innerText = map.voiceBtn;
+      document.getElementById('clearBtn').innerText = map.clearBtn;
+      document.getElementById('aboutTitle').innerText = map.aboutTitle;
+      document.getElementById('aboutText').innerText = map.aboutText;
+      document.getElementById('panelTitle').innerText = map.panelTitle;
+      document.getElementById('labelWeather').innerText = map.labelWeather;
+      document.getElementById('fetchWeather').innerText = map.fetchWeather;
+      document.getElementById('downloadReport').innerText = map.downloadReport;
+      document.getElementById('speakReportBtn').innerText = map.speakReportBtn;
+    }
+
+    // language buttons
+    document.querySelectorAll('.langBtn').forEach(b=>{
+      b.addEventListener('click',()=>{
+        document.querySelectorAll('.langBtn').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        applyLang(b.dataset.lang);
+      });
+    });
+
+    // default populate
+    applyLang('en');
+
+    // -------------------------
+    // Simple rule-based advisory logic
+    // -------------------------
+    function computeRecommendation(data){
+      // data: {name, soilType, area, prevCrop, problem, notes, location, weather}
+      const rec = [];
+      // Crop recommendation (very simple rules — extend with ML)
+      if(data.soilType === 'sandy'){
+        rec.push({title:'Suggested Crops', text:'Groundnut, Pearl Millet (Bajra), Sunflower — tolerant to sandy soil.'});
+      } else if(data.soilType === 'clay'){
+        rec.push({title:'Suggested Crops', text:'Paddy (if irrigated), Sugarcane, Soybean (with proper drainage).'});
+      } else if(data.soilType === 'loam'){
+        rec.push({title:'Suggested Crops', text:'Wheat, Maize, Vegetables — loam is versatile.'});
+      } else {
+        rec.push({title:'Suggested Crops', text:'Pulses and oilseeds are generally safe choices.'});
+      }
+
+      // Problem-specific advice
+      if(data.problem === 'pests'){
+        rec.push({title:'Pest Guidance', text:'Apply integrated pest management: use pheromone traps, biological control, and targeted pesticide only when threshold exceeded. Consult local agri-officer.'});
+      } else if(data.problem === 'water'){
+        rec.push({title:'Water Stress', text:'Consider drought-tolerant varieties, mulching to retain moisture, drip irrigation to save water.'});
+      } else if(data.problem === 'low_yield'){
+        rec.push({title:'Yield Improvement', text:'Soil test recommended. Balanced NPK application per soil test; crop rotation and use of certified seeds.'});
+      } else {
+        rec.push({title:'General Advice', text:'Collect soil pH & NPK data (lab). Follow locally adapted practices and timely sowing.'});
+      }
+
+      // fertilizer rough suggestion
+      const area = Math.max(0.01, parseFloat(data.area) || 1);
+      let fert = 'Apply balanced fertilizer as per soil test.';
+      if(area <= 1){
+        fert = 'Small area: consider micro-dosing of fertilizers; avoid over-application.';
+      } else if(area > 5){
+        fert = 'Larger area: plan bulk procurement of certified fertilizer and map zones.';
+      }
+      rec.push({title:'Fertilizer Note', text: fert});
+
+      // weather-aware note (if rainy)
+      if(data.weather && data.weather.toLowerCase().includes('rain')){
+        rec.push({title:'Weather Alert', text:'Rain expected: delay pesticide application; prepare drainage if heavy showers.'});
+      }
+
+      // simple NPK placeholder advice
+      rec.push({title:'Soil Test', text:'If pH < 6.5 use lime; if pH > 7.5 use gypsum. Get NPK values for precise dosing.'});
+
+      return rec;
+    }
+
+    // render recommendation
+    function renderRecommendations(items){
+      const sec = document.getElementById('recommendSection');
+      sec.innerHTML = '';
+      const name = document.getElementById('farmerName').value || 'Farmer';
+      const header = document.createElement('div');
+      header.innerHTML = `<strong>Advisory for ${escapeHtml(name)}</strong>`;
+      header.className = 'small';
+      sec.appendChild(header);
+      items.forEach(it=>{
+        const el = document.createElement('div');
+        el.className = 'recItem';
+        el.innerHTML = `<strong>${escapeHtml(it.title)}</strong><div style="margin-top:6px">${escapeHtml(it.text)}</div>`;
+        sec.appendChild(el);
+      });
+      // make speakable summary
+      window.latestRecommendationText = items.map(i=>i.title+': '+i.text).join('. ');
+    }
+
+    // Basic helpers
+    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])) }
+
+    // button hooks
+    document.getElementById('adviseBtn').addEventListener('click',()=>{
+      const data = gatherForm();
+      const rec = computeRecommendation(data);
+      renderRecommendations(rec);
+    });
+
+    document.getElementById('clearBtn').addEventListener('click',()=>{
+      ['farmerName','area','prevCrop','notes','location'].forEach(id=>document.getElementById(id).value = '');
+      document.getElementById('recommendSection').innerHTML = '';
+      document.getElementById('weatherText').innerText = '— (demo)';
+      document.getElementById('soilPh').innerText = '—';
+    });
+
+    document.getElementById('downloadReport').addEventListener('click',()=>{
+      window.print();
+    });
+
+    document.getElementById('fetchWeather').addEventListener('click',()=>{
+      const loc = document.getElementById('location').value || 'Default location';
+      // ---------------------------
+      // PLACEHOLDER: integrate real weather APIs here
+      // Example: call Open-Meteo / OpenWeather using fetch()
+      // For demo we simulate:
+      // ---------------------------
+      const demo = ['Sunny 32°C','Cloudy 28°C','Rain expected 24°C'];
+      const w = demo[Math.floor(Math.random()*demo.length)];
+      document.getElementById('weatherText').innerText = w;
+      // set soil ph random demo
+      const ph = (6 + Math.random()*2).toFixed(1);
+      document.getElementById('soilPh').innerText = ph;
+    });
+
+    // gather form data
+    function gatherForm(){
+      return {
+        name: document.getElementById('farmerName').value,
+        soilType: document.getElementById('soilType').value,
+        area: document.getElementById('area').value,
+        prevCrop: document.getElementById('prevCrop').value,
+        problem: document.getElementById('mainProblem').value,
+        notes: document.getElementById('notes').value,
+        location: document.getElementById('location').value,
+        weather: document.getElementById('weatherText').innerText
+      };
+    }
+
+    // -------------------------
+    // Voice input using Web Speech API (recognition)
+    // -------------------------
+    let recognition, recognizing=false;
+    if('webkitSpeechRecognition' in window || 'SpeechRecognition' in window){
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-IN';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onstart = ()=>{recognizing=true; document.getElementById('voiceStatus').innerText = 'Mic: on';}
+      recognition.onend = ()=>{recognizing=false; document.getElementById('voiceStatus').innerText = 'Mic: off';}
+      recognition.onerror = (e)=>{console.warn('voice error',e); document.getElementById('voiceStatus').innerText = 'Mic: error';}
+
+      recognition.onresult = (evt)=>{
+        const text = evt.results[0][0].transcript;
+        // naive parsing: try to fill name/soil/prevCrop by keywords
+        // user could say: "My name is Ramesh. Soil sandy. Previously wheat."
+        const t = text.toLowerCase();
+        // attempt name capture
+        const nameMatch = text.match(/name is ([a-zA-Z\u0900-\u097F\u0A00-\u0A7F ]+)/i);
+        if(nameMatch) document.getElementById('farmerName').value = nameMatch[1].trim();
+        // soil detection
+        if(t.includes('sandy')) document.getElementById('soilType').value = 'sandy';
+        if(t.includes('loam')||t.includes('loamy')) document.getElementById('soilType').value = 'loam';
+        if(t.includes('clay')) document.getElementById('soilType').value = 'clay';
+        // prev crop
+        const cropMatch = text.match(/(previous|before) (crop )?(is )?([a-zA-Z\u0900-\u097F\u0A00-\u0A7F ]+)/i);
+        if(cropMatch) document.getElementById('prevCrop').value = cropMatch[4].trim();
+        // fill notes
+        document.getElementById('notes').value = (document.getElementById('notes').value + ' ' + text).trim();
+      };
+    } else {
+      document.getElementById('voiceStatus').innerText = 'Mic not supported';
+      document.getElementById('voiceBtn').disabled = true;
+    }
+
+    document.getElementById('voiceBtn').addEventListener('click',()=>{
+      if(!recognition) return alert('Voice not supported in this browser; use Chrome.');
+      if(recognizing){
+        recognition.stop();
+      } else {
+        recognition.start();
+      }
+    });
+
+    // -------------------------
+    // Text-to-Speech: read latest recommendation
+    // -------------------------
+    document.getElementById('speakReportBtn').addEventListener('click',()=>{
+      const text = window.latestRecommendationText || 'No recommendation yet. Please click Get Advisory.';
+      speakText(text);
+    });
+
+    function speakText(text){
+      if(!('speechSynthesis' in window)) return alert('Speech synthesis not supported');
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = document.querySelector('.langBtn.active').dataset.lang === 'hi' ? 'hi-IN' : 'en-IN';
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utter);
+    }
+
+    // Prevent accidental print of UI controls
+    window.onafterprint = ()=>{console.log('printed');};
+
+    // small UX: escape key clears rec
+    document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') document.getElementById('recommendSection').innerHTML = ''; });
+
+    // initial demo recommendation
+    // renderRecommendations(computeRecommendation({soilType:'loam',area:1,problem:'low_yield',weather:'Sunny 32°C'}));
+  </script>
+</body>
+</html>

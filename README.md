@@ -14,7 +14,4 @@ Text-to-Speech crop recommendations
 Print / Save report functionalit
 
 
-
-
-
-it can easily accessable and open source
+USED BY PERMISSIONS 

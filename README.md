@@ -11,7 +11,7 @@ Voice Input using Web Speech API
 
 Text-to-Speech crop recommendations
 
-Print / Save report functionalit
+Print Save report functionalit
 
 
 USED BY PERMISSIONS 

@@ -1,7 +1,7 @@
 # smart_crop_webpage
 🌾 Features:
 
-Multilingual support (English, Hindi, Punjabi)
+Multilingual support (English, Hindi)
 
 Rule-based crop recommendation system
 
